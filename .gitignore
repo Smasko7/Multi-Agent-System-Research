@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.pyc
+.ruff_cache/
+.pytest_cache/
+data/vectorstore/
+data/corpus/
+evaluation_results.json
+.claude
+CLAUDE.md

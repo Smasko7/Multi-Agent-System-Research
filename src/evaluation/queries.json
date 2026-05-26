@@ -1,0 +1,73 @@
+[
+  {
+    "query": "What is retrieval-augmented generation (RAG) and why is it important?",
+    "key_facts": [
+      "RAG combines retrieval with generation",
+      "Reduces hallucination",
+      "Grounds LLM output in external documents"
+    ]
+  },
+  {
+    "query": "Compare BDI and reactive agent architectures",
+    "key_facts": [
+      "BDI uses beliefs, desires, intentions",
+      "Reactive agents use stimulus-response rules",
+      "BDI supports long-term planning",
+      "Reactive agents are faster but less flexible"
+    ]
+  },
+  {
+    "query": "What is the Contract Net Protocol and how is it used in multi-agent systems?",
+    "key_facts": [
+      "Contract Net Protocol is a task allocation mechanism",
+      "Involves manager and contractor agents",
+      "Uses call for proposals, bids, and awards",
+      "Enables dynamic task distribution"
+    ]
+  },
+  {
+    "query": "Explain the FIPA ACL communication language for agents",
+    "key_facts": [
+      "FIPA stands for Foundation for Intelligent Physical Agents",
+      "ACL defines message types like inform, request, propose",
+      "Supports ontologies and content languages",
+      "Enables interoperability between agent platforms"
+    ]
+  },
+  {
+    "query": "What are transformer attention mechanisms and why are they effective?",
+    "key_facts": [
+      "Attention computes weighted sum of values",
+      "Self-attention captures dependencies within a sequence",
+      "Multi-head attention learns multiple representation subspaces",
+      "Scales better than RNNs for long sequences"
+    ]
+  },
+  {
+    "query": "How does CRISPR-Cas9 gene editing work?",
+    "key_facts": [
+      "CRISPR uses guide RNA to target specific DNA sequences",
+      "Cas9 is an endonuclease that cuts DNA",
+      "Enables precise genome editing",
+      "Has applications in medicine and agriculture"
+    ]
+  },
+  {
+    "query": "What caused the 2008 global financial crisis?",
+    "key_facts": [
+      "Subprime mortgage lending contributed to the crisis",
+      "Mortgage-backed securities spread risk systemically",
+      "Lehman Brothers collapsed in September 2008",
+      "Lack of regulatory oversight was a contributing factor"
+    ]
+  },
+  {
+    "query": "What is quantum entanglement and what are its practical applications?",
+    "key_facts": [
+      "Entangled particles share correlated quantum states",
+      "Measurement of one particle instantly affects the other",
+      "Applications include quantum cryptography and quantum computing",
+      "Einstein called it spooky action at a distance"
+    ]
+  }
+]
