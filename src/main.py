@@ -8,8 +8,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(name)s] %(message
 logger = logging.getLogger("main")
 
 
-def run(query: str) -> str:
-    """Run the multi-agent pipeline on a query and return the final answer."""
+SOURCE_LABELS = {
+    "document_retriever": "📚 Local Corpus (RAG)",
+    "tavily_search_results_json": "🌐 Web (Tavily)",
+    "duckduckgo_search": "🌐 Web (DuckDuckGo)",
+    "python_repl": "🐍 Python REPL",
+}
+
+
+def _format_sources(sources: list[str]) -> str:
+    """Dedupe and label a tool-name list for display."""
+    unique = list(dict.fromkeys(sources or []))
+    if not unique:
+        return "none (model knowledge only)"
+    return " · ".join(SOURCE_LABELS.get(s, s) for s in unique)
+
+
+def run(query: str) -> dict:
+    """Run the multi-agent pipeline on a query and return the final state."""
     logger.info(f"Query: {query}")
     graph = build_graph()
 
@@ -28,8 +44,7 @@ def run(query: str) -> str:
         "final_answer": "",
     }
 
-    result = graph.invoke(initial_state)
-    return result.get("final_answer", result.get("synthesis", "No answer produced."))
+    return graph.invoke(initial_state)
 
 
 def main():
@@ -37,7 +52,18 @@ def main():
         print("Usage: python -m src.main \"Your research query here\"")
         sys.exit(1)
     query = " ".join(sys.argv[1:])
-    answer = run(query)
+    result = run(query)
+
+    pro_sources = _format_sources(result.get("research_sources_pro", []))
+    skep_sources = _format_sources(result.get("research_sources_skeptical", []))
+    answer = result.get("final_answer") or result.get("synthesis") or "No answer produced."
+
+    print("\n" + "=" * 60)
+    print("SOURCES USED")
+    print("=" * 60)
+    print(f"🟢 Researcher · PRO       — {pro_sources}")
+    print(f"🔴 Researcher · SKEPTICAL — {skep_sources}")
+
     print("\n" + "=" * 60)
     print("FINAL ANSWER")
     print("=" * 60)

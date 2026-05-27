@@ -1,16 +1,33 @@
-# Agent Graph (last run)
+# Agent Graph (static graph)
 
 ```mermaid
-flowchart LR
-    START([START]) --> researcher[Researcher]
-    researcher[Researcher] --> critic[Critic]
-    critic[Critic] --> synthesizer[Synthesizer]
-    synthesizer[Synthesizer] --> fact_checker[Fact_checker]
-    fact_checker[Fact_checker] --> END([END])
-    style START fill:#6366f1,color:#fff,stroke:#4f46e5
-    style END fill:#6366f1,color:#fff,stroke:#4f46e5
-    style researcher fill:#22c55e,color:#fff,stroke:#16a34a
-    style critic fill:#22c55e,color:#fff,stroke:#16a34a
-    style synthesizer fill:#22c55e,color:#fff,stroke:#16a34a
-    style fact_checker fill:#22c55e,color:#fff,stroke:#16a34a
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	researcher_pro(researcher_pro)
+	researcher_skeptical(researcher_skeptical)
+	critic(critic)
+	synthesizer(synthesizer)
+	fact_checker(fact_checker)
+	devils_advocate(devils_advocate)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> researcher_pro;
+	__start__ --> researcher_skeptical;
+	critic -.-> researcher_pro;
+	critic -.-> researcher_skeptical;
+	critic -.-> synthesizer;
+	devils_advocate -. &nbsp;end&nbsp; .-> __end__;
+	devils_advocate -.-> synthesizer;
+	fact_checker --> devils_advocate;
+	researcher_pro --> critic;
+	researcher_skeptical --> critic;
+	synthesizer --> fact_checker;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
+
 ```

@@ -14,3 +14,4 @@ langchain-huggingface>=0.1.0
 sentence-transformers>=3.0.0
 truststore>=0.10.0
 langchain-groq>=0.2.0
+pygame>=2.6.0

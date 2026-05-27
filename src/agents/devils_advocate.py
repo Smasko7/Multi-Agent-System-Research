@@ -7,7 +7,7 @@ ignored. It runs AFTER the Fact-Checker so it sees a synthesis that has already
 passed factual verification — its job is to find structural / framing / coverage
 weaknesses, not factual errors.
 
-Runs on Groq Llama-3.3-70B for model-family independence.
+Runs on Groq Qwen3-32B for model-family independence.
 """
 
 import json
@@ -24,36 +24,44 @@ from src.agents._common import extract_text
 
 logger = logging.getLogger(__name__)
 
-DEVILS_ADVOCATE_SYSTEM_PROMPT = """You are the Devil's Advocate agent in a multi-agent research system.
+DEVILS_ADVOCATE_SYSTEM_PROMPT = """You are the Devil's Advocate agent in a multi-agent research system. Your
+role is adversarial: you exist to find what's wrong with the synthesis, not to
+agree with it.
 
-The synthesis you are reviewing has ALREADY been fact-checked for claim-level
-correctness. Do not re-do that work. Your job is structural and adversarial:
-find what a sharp critic would attack about this answer if they wanted to weaken
-its persuasiveness or expose what it's missing.
+The synthesis has already been fact-checked for claim-level correctness — do not
+re-do that work. Your job is STRUCTURAL critique: what's the synthesis missing,
+mis-framing, or assuming that a sharp, skeptical reader would push back on?
 
-Look for, at minimum:
-- Hidden assumptions presented as fact
-- Important counterexamples or edge cases the synthesis ignores
-- Audiences or use cases where this answer would mislead
-- Trade-offs that are stated as benefits (or vice versa)
-- Framing choices that subtly favor one perspective
-- Topics adjacent to the query that a reader would want addressed and aren't
+**You should expect to find at least 2-3 meaningful weaknesses in almost any
+synthesis.** Even a strong answer has real gaps, hidden assumptions, audiences
+it underserves, or counterexamples it doesn't engage with. If you find fewer
+than 2, you are probably being too easy on the synthesis — look harder.
+
+Categories to scrutinize (find at least one in most categories):
+- **Hidden assumptions** presented as settled fact. What does the answer take
+  for granted that a critic might dispute?
+- **Counterexamples** or edge cases the synthesis doesn't address.
+- **Audiences or contexts** where the answer is actively misleading or wrong.
+- **Framing bias**: trade-offs presented as benefits, contested claims presented
+  as consensus, or one perspective implicitly favored.
+- **Missing scope**: important adjacent topics or follow-up questions left
+  unaddressed.
+- **Overgeneralization**: claims stated more broadly than the evidence supports.
 
 You MUST respond with EXACTLY this JSON format and nothing else:
 {
     "weaknesses": [
-        "Specific, concrete weakness 1 (what's missing or misleading, and why it matters)",
+        "Specific, concrete weakness 1 (what's missing/misleading and why it matters)",
         "Specific, concrete weakness 2",
         "..."
     ],
     "verdict": "pass" or "revise"
 }
 
-Verdict rule: "revise" if you identify ≥2 SUBSTANTIVE weaknesses (not nitpicks).
-"pass" only if the synthesis is genuinely well-rounded. Be hard-nosed — the system
-relies on you to surface what the other agents would prefer to ignore. Each
-weakness must be specific enough that the Synthesizer knows exactly what to add
-or rephrase."""
+Verdict rule: "revise" if you identify ≥2 substantive weaknesses. "pass" only
+if the synthesis is genuinely close to airtight (which is rare). Lean toward
+revise when in doubt — the system needs your adversarial pushback to produce
+better answers."""
 
 
 def _parse_json(content, default: dict) -> dict:
@@ -109,7 +117,11 @@ def devils_advocate_node(state: AgentState) -> dict:
     da.setdefault("weaknesses", [])
     da.setdefault("verdict", "pass")
 
-    # Enforce: revise if 2+ substantive weaknesses
+    # Count-based override: ≥2 substantive weaknesses trips revision regardless
+    # of what the LLM chose for verdict. Combined with the harsher prompt that
+    # tells the model to *expect* finding 2-3 weaknesses, this should produce
+    # revisions on the majority of runs while still allowing genuinely strong
+    # syntheses to pass cleanly.
     if len(da["weaknesses"]) >= 2:
         da["verdict"] = "revise"
     else:

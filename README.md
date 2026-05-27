@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-orchestrated-orange.svg)](https://github.com/langchain-ai/langgraph)
 [![Gemini](https://img.shields.io/badge/Gemini-3.1_Flash--Lite-4285F4.svg)](https://ai.google.dev/)
-[![Groq](https://img.shields.io/badge/Groq-Llama--3.3--70B-F55036.svg)](https://groq.com/)
+[![Groq](https://img.shields.io/badge/Groq-Qwen3--32B-F55036.svg)](https://groq.com/)
 [![Budget](https://img.shields.io/badge/Budget-%240-success.svg)](#)
 
 ---
@@ -21,7 +21,7 @@ Ask the system any research question. Instead of one model giving you one answer
 - 😈 **A devil's advocate** red-teams the answer for hidden assumptions and missing perspectives
 - 🔁 If either reviewer flags issues, the synthesizer **revises** until everyone is satisfied (or the iteration cap kicks in)
 
-The judgment agents run on **Groq's Llama-3.3-70B** while the generation agents run on **Gemini 3.1 Flash-Lite** — intentionally different model families so they have independent training biases. No more Gemini judging Gemini.
+The judgment agents run on **Groq's Qwen3-32B** (a reasoning model) while the generation agents run on **Gemini 3.1 Flash-Lite** — intentionally different model families so they have independent training biases. No more Gemini judging Gemini.
 
 ---
 
@@ -63,10 +63,10 @@ flowchart TD
 |---|---|---|---|
 | 🟢 **Researcher · PRO** | Gemini 3.1 Flash-Lite | Web, RAG, Python REPL | Finds supporting evidence, mechanisms, applications |
 | 🔴 **Researcher · SKEPTICAL** | Gemini 3.1 Flash-Lite | Web, RAG, Python REPL | Finds limitations, counter-evidence, controversies |
-| ⚖️ **Critic** | Groq Llama-3.3-70B | RAG (for independent verification) | Rubric scoring: `relevance`, `completeness`, `source_quality`, `balance` (1-5 each); revise if any < 3 |
+| ⚖️ **Critic** | Groq Qwen3-32B | RAG (for independent verification) | Rubric scoring: `relevance`, `completeness`, `source_quality`, `balance` (1-5 each); revise if any < 3 |
 | ✍️ **Synthesizer** | Gemini 3.1 Flash-Lite | – | Mediator: explicitly reconciles PRO + SKEPTICAL |
-| 🔎 **Fact-Checker** | Groq Llama-3.3-70B | Web search (mandatory) | Chain-of-Verification: extracts 3-7 atomic claims, marks each `supported` / `verified` / `unsupported` / `contradicted` |
-| 😈 **Devil's Advocate** | Groq Llama-3.3-70B | – | Red-team: finds hidden assumptions, ignored audiences, framing bias, missing topics |
+| 🔎 **Fact-Checker** | Groq Qwen3-32B | Web search (mandatory) | Chain-of-Verification: extracts 3-7 atomic claims, marks each `supported` / `verified` / `unsupported` / `contradicted` |
+| 😈 **Devil's Advocate** | Groq Qwen3-32B | – | Red-team: finds hidden assumptions, ignored audiences, framing bias, missing topics |
 
 ---
 
@@ -86,7 +86,7 @@ pip install -r requirements.txt
 cp .env.example .env
 # Then edit .env and fill in:
 #   GOOGLE_API_KEY=AIza...      (required — for Gemini)
-#   GROQ_API_KEY=gsk_...        (required — for Llama-3.3 judges)
+#   GROQ_API_KEY=gsk_...        (required — for Qwen3 judges)
 #   TAVILY_API_KEY=tvly-...     (optional — falls back to DuckDuckGo)
 ```
 
@@ -101,6 +101,7 @@ cp .env.example .env
 |---|---|
 | One-shot CLI query | `python -m src.main "What is retrieval-augmented generation?"` |
 | Pretty Streamlit UI | `streamlit run src/app.py` |
+| Arcade Pygame GUI | `python -m src.arcade` |
 | Render the graph | `python -m src.visualize static` |
 | Evaluation harness | `python -m src.evaluation.evaluate` |
 | Tests (no API calls) | `python -m pytest tests/ -v` |
@@ -225,7 +226,7 @@ If DA flags ≥2 substantive weaknesses, the Synthesizer revises (subject to ite
 |---|---|---|
 | **Orchestration** | LangGraph | Native parallel branches, conditional routing, state reducers |
 | **Generation LLM** | Gemini 3.1 Flash-Lite | 15 RPM free tier — handles the fan-out load |
-| **Judgment LLM** | Groq Llama-3.3-70B | Different model family from Gemini → independent biases; 30 RPM free; very fast |
+| **Judgment LLM** | Groq Qwen3-32B | Different model family from Gemini → independent biases; 30 RPM free; very fast |
 | **Embeddings** | sentence-transformers/all-MiniLM-L6-v2 | Local — sidesteps Windows TLS interception issues with cloud embedding APIs |
 | **Vector store** | FAISS-CPU | ~200 MB RAM; persisted to disk for reuse |
 | **Web search** | Tavily → DuckDuckGo | Tavily is higher quality; DDG is the no-key fallback |
@@ -297,7 +298,7 @@ All knobs in [`src/config.py`](src/config.py):
 | Setting | Default | Notes |
 |---|---|---|
 | `GENERATION_MODEL` | `gemini-3.1-flash-lite` | Researchers + Synthesizer |
-| `JUDGMENT_MODEL` | `llama-3.3-70b-versatile` | Critic + Fact-Checker + Devil's Advocate |
+| `JUDGMENT_MODEL` | `qwen/qwen3-32b` | Critic + Fact-Checker + Devil's Advocate |
 | `EVAL_MODEL` | `gemini-3.1-flash-lite` | LLM-as-judge in eval harness |
 | `MODEL_TEMPERATURE` | `1.0` | Gemini 2.5+ degrades below 1.0 |
 | `MAX_ITERATIONS` | `2` | Per feedback loop |
@@ -322,7 +323,7 @@ If you're on a corporate network where this still breaks, exclude `*.huggingface
 ### Free-tier rate limits
 
 - Gemini 3.1 Flash-Lite: 15 RPM. Fan-out + tool-call rounds + synthesis can use 8-12 calls per query. `RATE_LIMIT_SLEEP=2` keeps you under cap.
-- Groq Llama-3.3-70B: 30 RPM. Three sequential judge calls per query — well under.
+- Groq Qwen3-32B: 30 RPM. Three sequential judge calls per query — well under.
 - Long evaluation sweeps: keep your test set ≤ 8 queries.
 
 ### Stale vector store after changing the embedding model

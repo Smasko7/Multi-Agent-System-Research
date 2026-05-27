@@ -1,6 +1,6 @@
 """Critic agent — evaluates BOTH researchers' findings using a structured rubric.
 
-Runs on a different model family (Groq Llama-3.3-70B) than the researchers (Gemini),
+Runs on a different model family (Groq Qwen3-32B) than the researchers (Gemini),
 so it has genuinely independent training biases. Has its own RAG tool so it can
 spot-check claims against the local corpus instead of just trusting the researchers.
 """

@@ -5,7 +5,7 @@ Process:
 2. For each claim, check it against the research findings AND against web search.
 3. Flag claims that are unsupported, contradicted, or hallucinated.
 
-Runs on Groq Llama-3.3-70B (different model family from generation agents) and is
+Runs on Groq Qwen3-32B (different model family from generation agents) and is
 REQUIRED to invoke web search at least once before issuing a verdict.
 """
 
@@ -46,10 +46,13 @@ You MUST respond with EXACTLY this JSON format and nothing else:
     "issues": ["specific issue 1", "specific issue 2"]
 }
 
-Verdict rule: "revise" if ANY claim is "unsupported" or "contradicted". "pass" only
-when every claim is supported or independently verified. Issues list must give the
-Synthesizer concrete fixes (e.g. "Drop the claim that X is N% accurate — no source
-in research or web supports this")."""
+Verdict rule: "revise" ONLY if at least one claim is "contradicted" (actively
+disagreed with by research or web). Claims that are merely "unsupported" (no
+source found but not contradicted) should be listed in issues for the Synthesizer's
+awareness, but do NOT by themselves require revision — missing attribution is too
+common to block on. "pass" when no claim is contradicted, even if some are unsupported.
+Issues list must give the Synthesizer concrete fixes (e.g. "Drop the claim that X
+is N% accurate — no source in research or web supports this")."""
 
 
 def _parse_json(content, default: dict) -> dict:
@@ -128,9 +131,11 @@ def fact_checker_node(state: AgentState) -> dict:
     fact_check.setdefault("issues", [])
     fact_check.setdefault("claims", [])
 
-    # Enforce: revise if any claim is unsupported or contradicted
-    bad_statuses = {"unsupported", "contradicted"}
-    if any(c.get("status") in bad_statuses for c in fact_check["claims"] if isinstance(c, dict)):
+    # Enforce: revise ONLY on active contradictions (factual errors).
+    # `unsupported` claims are noted as issues but don't auto-trigger revision —
+    # missing attribution alone is too noisy a trigger. The LLM's own verdict still
+    # stands for borderline cases.
+    if any(c.get("status") == "contradicted" for c in fact_check["claims"] if isinstance(c, dict)):
         fact_check["verdict"] = "revise"
 
     logger.info(
