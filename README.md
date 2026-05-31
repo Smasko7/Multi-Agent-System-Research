@@ -75,7 +75,7 @@ flowchart TD
 ### 1. Clone & install
 
 ```powershell
-git clone <your-repo-url>
+git clone <https://github.com/Smasko7/Multi-Agent-System-Research.git>
 cd "Multi-Agent System"
 pip install -r requirements.txt
 ```
@@ -121,7 +121,6 @@ If `data/corpus/` is empty, RAG is silently disabled and the researchers fall ba
 
 ```
 Multi-Agent System/
-├── 📄 CLAUDE.md                  Reference for AI assistants & devs
 ├── 📄 README.md                  You are here
 ├── 📄 requirements.txt
 ├── 🔐 .env                       Secrets (gitignored)
@@ -308,29 +307,6 @@ All knobs in [`src/config.py`](src/config.py):
 
 ---
 
-## 🩹 Known Issues & Workarounds
-
-### Windows + HTTPS-scanning AV (Kaspersky / ESET / Avast / Bitdefender)
-
-These products intercept TLS connections and re-sign them with a substitute CA. Python ≥ 3.13 rejects some of these substitute certs as malformed (`Basic Constraints of CA cert not marked critical`), breaking cloud embedding APIs.
-
-**Workaround applied:**
-- `src/__init__.py` runs `truststore.inject_into_ssl()` at import time so Python uses the OS cert store (which contains the AV's CA).
-- Embeddings switched from cloud (Gemini) to local (sentence-transformers).
-
-If you're on a corporate network where this still breaks, exclude `*.huggingface.co` from your AV's HTTPS scanning.
-
-### Free-tier rate limits
-
-- Gemini 3.1 Flash-Lite: 15 RPM. Fan-out + tool-call rounds + synthesis can use 8-12 calls per query. `RATE_LIMIT_SLEEP=2` keeps you under cap.
-- Groq Qwen3-32B: 30 RPM. Three sequential judge calls per query — well under.
-- Long evaluation sweeps: keep your test set ≤ 8 queries.
-
-### Stale vector store after changing the embedding model
-
-The FAISS index encodes vector dimensions. If you change `EMBEDDING_MODEL`, **delete `data/vectorstore/`** or similarity search will silently return garbage.
-
----
 
 ## 🧪 Testing
 
